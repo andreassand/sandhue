@@ -1,0 +1,2 @@
+BRIDGE_IP = "192.168.1.38"
+USERNAME = "slkiNPsD501zowIgkCWSzdrMrYvcYP6gKvp5uaxb"
