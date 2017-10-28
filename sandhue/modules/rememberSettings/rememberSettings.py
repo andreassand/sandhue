@@ -19,15 +19,13 @@ def reachable(id, snapshot):
 def update_light_state(light_states, light_brightness, snapshot, id):
     light_is_reachable = reachable(id, snapshot)
     if not light_is_reachable:
-        print "light is not reachable:", id
         light_states[id] = LightStatesEnum.OFF
     elif light_is_reachable and light_states[id] == LightStatesEnum.UNKNOWN:
         light_states[id] = LightStatesEnum.ON
         light_brightness[id] = snapshot[id]['state']['bri']
     elif light_is_reachable and light_states[id] == LightStatesEnum.OFF:
-        print "light just turned on:", id
         light_states[id] = LightStatesEnum.JUST_TURNED_ON
-    else: # it is reachable and it was ON, so keep it and save brightness
+    else:  # it is reachable and it was ON, so keep it and save brightness
         light_states[id] = LightStatesEnum.ON
         light_brightness[id] = snapshot[id]['state']['bri']
 
@@ -40,7 +38,7 @@ def update_light_states(light_states, light_brightness, snapshot):
 def reset_light_brightness(light_states, light_brightness, id):
     if light_states[id] == LightStatesEnum.JUST_TURNED_ON:
         previous_brightness = light_brightness[id]
-        lights[id].state(bri = previous_brightness)
+        lights[id].state(bri=previous_brightness)
         light_states[id] = LightStatesEnum.ON
 
 
@@ -76,4 +74,4 @@ if __name__ == "__main__":
         print
         print
         print
-        time.sleep(0.5)
+        time.sleep(0.2)
