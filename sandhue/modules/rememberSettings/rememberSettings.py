@@ -20,19 +20,28 @@ def update_light_state(light_states, light_brightness, snapshot, id):
     light_is_reachable = reachable(id, snapshot)
     if not light_is_reachable and light_states[id] == LightStatesEnum.ON:
         print "Light just turned off:", id
+        print "Light brightness stored:", light_brightness[id]
+        print ""
         light_states[id] = LightStatesEnum.OFF
     elif not light_is_reachable and light_states[id] != LightStatesEnum.ON:
         light_states[id] = LightStatesEnum.OFF
     elif light_is_reachable and light_states[id] == LightStatesEnum.UNKNOWN:
-        print "Light went from 'unknown' to 'on':", id
         light_states[id] = LightStatesEnum.ON
         light_brightness[id] = snapshot[id]['state']['bri']
+        print "Light went from 'unknown' to 'on':", id
+        print "Light brightness stored:", light_brightness[id]
+        print ""
     elif light_is_reachable and light_states[id] == LightStatesEnum.OFF:
         print "Light just turned on:", id
+        print ""
         light_states[id] = LightStatesEnum.JUST_TURNED_ON
     else:  # it is reachable and it was ON, so keep it and save brightness
         light_states[id] = LightStatesEnum.ON
+        previous_brightness = light_brightness[id]
         light_brightness[id] = snapshot[id]['state']['bri']
+        if previous_brightness != light_brightness[id]:
+            print "Brightness of", id, "changed to:", light_brightness[id]
+            print ""
 
 
 def update_light_states(light_states, light_brightness, snapshot):
@@ -45,6 +54,8 @@ def reset_light_brightness(light_states, light_brightness, id):
         previous_brightness = light_brightness[id]
         lights[id].state(bri=previous_brightness)
         light_states[id] = LightStatesEnum.ON
+        print "Jus reset brightness of", id, "to:", previous_brightness
+        print ""
 
 
 def reset_all_light_brightnesses(light_states, light_brightness):
