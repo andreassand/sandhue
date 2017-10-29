@@ -1,8 +1,14 @@
+from sandhue.api.logging import log
 import qhue
 import enum
 import time
+import sys
+import requests.exceptions
 
 import sandhue.api.credentials.credentials as credentials
+from sandhue.api.credentials.credentials import getName
+
+sys.tracebacklimit = 0 # TODO find another solution.
 
 
 class LightStatesEnum(enum.Enum):
@@ -19,29 +25,25 @@ def reachable(id, snapshot):
 def update_light_state(light_states, light_brightness, snapshot, id):
     light_is_reachable = reachable(id, snapshot)
     if not light_is_reachable and light_states[id] == LightStatesEnum.ON:
-        print "Light just turned off:", id
-        print "Light brightness stored:", light_brightness[id]
-        print ""
+        log.info("Light just turned off: %s" % getName(id))
+        log.info("Light brightness for '%s'stored: %d" % (getName(id), light_brightness[id]))
         light_states[id] = LightStatesEnum.OFF
     elif not light_is_reachable and light_states[id] != LightStatesEnum.ON:
         light_states[id] = LightStatesEnum.OFF
     elif light_is_reachable and light_states[id] == LightStatesEnum.UNKNOWN:
         light_states[id] = LightStatesEnum.ON
         light_brightness[id] = snapshot[id]['state']['bri']
-        print "Light went from 'unknown' to 'on':", id
-        print "Light brightness stored:", light_brightness[id]
-        print ""
+        log.info("Light on '%s' went from 'unknown' to 'on':" % getName(id))
+        log.info("Light brightness for '%s' stored: %d" % (getName(id), light_brightness[id]))
     elif light_is_reachable and light_states[id] == LightStatesEnum.OFF:
-        print "Light just turned on:", id
-        print ""
+        log.info("Light just turned on: %s" % getName(id))
         light_states[id] = LightStatesEnum.JUST_TURNED_ON
     else:  # it is reachable and it was ON, so keep it and save brightness
         light_states[id] = LightStatesEnum.ON
         previous_brightness = light_brightness[id]
         light_brightness[id] = snapshot[id]['state']['bri']
         if previous_brightness != light_brightness[id]:
-            print "Brightness of", id, "changed to:", light_brightness[id]
-            print ""
+            log.info("Brightness of '%s' changed to: %d" % (getName(id), light_brightness[id]))
 
 
 def update_light_states(light_states, light_brightness, snapshot):
@@ -54,8 +56,7 @@ def reset_light_brightness(light_states, light_brightness, id):
         previous_brightness = light_brightness[id]
         lights[id].state(bri=previous_brightness)
         light_states[id] = LightStatesEnum.ON
-        print "Jus reset brightness of", id, "to:", previous_brightness
-        print ""
+        log.info("Just reset brightness of %s to: %d" % (id, previous_brightness))
 
 
 def reset_all_light_brightnesses(light_states, light_brightness):
@@ -80,16 +81,13 @@ if __name__ == "__main__":
             update_light_states(light_states, light_brightness, snapShot)
             reset_all_light_brightnesses(light_states, light_brightness)
 
-            # for light in lights():
-            #     print "state of light", light, ":", light_states[light]
-            #     print "brightness of light", light, ":", light_brightness[light]
-            # print
-            # print
-            # print
+        except requests.exceptions.ChunkedEncodingError as e:
+            log.exception("ChunkedEncodingError")
+
         except Exception as e:
-            print "An exception occurred"
-            print "type(e):    ", type(e)
-            print "e.args:     ", e.args
-            print "e:          ", e
+            log.exception("An exception occurred")
+            log.exception("type(e):    %s" % str(type(e)))
+            log.exception("e.args:     %s" % str(e.args))
+            log.exception("e:          %s" % str(e))
 
         time.sleep(0.2)
