@@ -18,12 +18,17 @@ def reachable(id, snapshot):
 
 def update_light_state(light_states, light_brightness, snapshot, id):
     light_is_reachable = reachable(id, snapshot)
-    if not light_is_reachable:
+    if not light_is_reachable and light_states[id] == LightStatesEnum.ON:
+        print "Light just turned off:", id
+        light_states[id] = LightStatesEnum.OFF
+    elif not light_is_reachable and light_states[id] != LightStatesEnum.ON:
         light_states[id] = LightStatesEnum.OFF
     elif light_is_reachable and light_states[id] == LightStatesEnum.UNKNOWN:
+        print "Light went from 'unknown' to 'on':", id
         light_states[id] = LightStatesEnum.ON
         light_brightness[id] = snapshot[id]['state']['bri']
     elif light_is_reachable and light_states[id] == LightStatesEnum.OFF:
+        print "Light just turned on:", id
         light_states[id] = LightStatesEnum.JUST_TURNED_ON
     else:  # it is reachable and it was ON, so keep it and save brightness
         light_states[id] = LightStatesEnum.ON
@@ -51,11 +56,6 @@ if __name__ == "__main__":
     b = qhue.Bridge(credentials.BRIDGE_IP, credentials.USERNAME)
     lights = b.lights
 
-    print "Printing length"
-    print len(lights())
-    print "Setting state"
-    print lights()['1']['state']
-
     light_states = {}
     for light in lights():
         light_states[light] = LightStatesEnum.UNKNOWN
@@ -64,14 +64,21 @@ if __name__ == "__main__":
         light_brightness[light] = -1
 
     while True:
-        snapShot = lights()
-        update_light_states(light_states, light_brightness, snapShot)
-        reset_all_light_brightnesses(light_states, light_brightness)
+        try:
+            snapShot = lights()
+            update_light_states(light_states, light_brightness, snapShot)
+            reset_all_light_brightnesses(light_states, light_brightness)
 
-        for light in lights():
-            print "state of light", light, ":", light_states[light]
-            print "brightness of light", light, ":", light_brightness[light]
-        print
-        print
-        print
+            # for light in lights():
+            #     print "state of light", light, ":", light_states[light]
+            #     print "brightness of light", light, ":", light_brightness[light]
+            # print
+            # print
+            # print
+        except Exception as e:
+            print "An exception occurred"
+            print "type(e):    ", type(e)
+            print "e.args:     ", e.args
+            print "e:          ", e
+
         time.sleep(0.2)
