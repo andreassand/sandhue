@@ -56,7 +56,7 @@ def reset_light_brightness(light_states, light_brightness, id):
         previous_brightness = light_brightness[id]
         lights[id].state(bri=previous_brightness)
         light_states[id] = LightStatesEnum.ON
-        log.info("Just reset brightness of %s to: %d" % (id, previous_brightness))
+        log.info("Just reset brightness of %s to: %d" % (getName(id), previous_brightness))
 
 
 def reset_all_light_brightnesses(light_states, light_brightness):
